@@ -70,10 +70,30 @@
     language.setAttribute('aria-label', value === 'en' ? 'Switch to Chinese' : '切换至英文');
   }
   language.addEventListener('click', () => setLanguage(lang === 'en' ? 'zh' : 'en'));
+  const frames = known.map(name => document.getElementById('frame-' + name));
+  function syncFrame(frame) {
+    const frameDocument = frame.contentDocument;
+    if (!frameDocument || frameDocument.readyState !== 'complete') return;
+    frameDocument.documentElement.dataset.theme = document.documentElement.dataset.theme;
+    const nestedToggle = frameDocument.querySelector('.theme-toggle');
+    if (nestedToggle) nestedToggle.style.display = 'none';
+  }
+  function setTheme(value) {
+    document.documentElement.dataset.theme = value;
+    theme.textContent = value === 'dark' ? '☀' : '☾';
+    localStorage.setItem('scholarcheck-theme', value);
+    frames.forEach(syncFrame);
+  }
+  frames.forEach(frame => {
+    frame.addEventListener('load', () => syncFrame(frame));
+    if (frame.contentDocument?.readyState === 'complete') syncFrame(frame);
+  });
+  const savedTheme = localStorage.getItem('scholarcheck-theme');
+  setTheme(savedTheme === 'light' || savedTheme === 'dark'
+    ? savedTheme
+    : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
   theme.addEventListener('click', () => {
-    const dark = document.documentElement.dataset.theme !== 'dark';
-    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    theme.textContent = dark ? '☀' : '☾';
+    setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
   });
   addEventListener('hashchange', () => select(location.hash.slice(1), false));
   select(location.hash.slice(1) === 'bibtex' ? 'bibtex' : 'citation', false);
