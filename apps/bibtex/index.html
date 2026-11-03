@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BibTeX Reference Validator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Light Theme (default) ── */
+  :root, [data-theme="light"] {
+    --bg: #f5f3ef;
+    --bg-warm: #ebe8e2;
+    --surface: #ffffff;
+    --surface2: #f0ede7;
+    --border: #ddd8cf;
+    --border-focus: #3d6be0;
+    --text: #3a3632;
+    --text-dim: #8a837a;
+    --text-bright: #1a1714;
+    --accent: #3d6be0;
+    --accent-soft: rgba(61, 107, 224, 0.08);
+    --accent-glow: rgba(61, 107, 224, 0.12);
+    --green: #1a9d6c;
+    --green-bg: rgba(26, 157, 108, 0.08);
+    --green-border: rgba(26, 157, 108, 0.2);
+    --red: #d94452;
+    --red-bg: rgba(217, 68, 82, 0.06);
+    --red-border: rgba(217, 68, 82, 0.18);
+    --yellow: #b8860b;
+    --yellow-bg: rgba(184, 134, 11, 0.07);
+    --yellow-border: rgba(184, 134, 11, 0.2);
+    --purple: #8155d8;
+    --purple-bg: rgba(129, 85, 216, 0.07);
+    --purple-border: rgba(129, 85, 216, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+    --dot-color: rgba(61, 107, 224, 0.08);
+  }
+
+  /* ── Dark Theme ── */
+  [data-theme="dark"] {
+    --bg: #111318;
+    --bg-warm: #16181f;
+    --surface: #1c1f28;
+    --surface2: #232733;
+    --border: #2e3344;
+    --border-focus: #5b85f5;
+    --text: #b8c0d0;
+    --text-dim: #5f6a82;
+    --text-bright: #e4e8f0;
+    --accent: #5b85f5;
+    --accent-soft: rgba(91, 133, 245, 0.1);
+    --accent-glow: rgba(91, 133, 245, 0.15);
+    --green: #3dd9a0;
+    --green-bg: rgba(61, 217, 160, 0.08);
+    --green-border: rgba(61, 217, 160, 0.2);
+    --red: #f07178;
+    --red-bg: rgba(240, 113, 120, 0.08);
+    --red-border: rgba(240, 113, 120, 0.18);
+    --yellow: #f0c55b;
+    --yellow-bg: rgba(240, 197, 91, 0.08);
+    --yellow-border: rgba(240, 197, 91, 0.18);
+    --purple: #b196f5;
+    --purple-bg: rgba(177, 150, 245, 0.08);
+    --purple-border: rgba(177, 150, 245, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.4);
+    --dot-color: rgba(91, 133, 245, 0.05);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    transition: background 0.4s ease, color 0.3s ease;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 0;
+    transition: background-image 0.4s;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-text h1 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .header-text h1 span { color: var(--accent); }
+  .header-text p { color: var(--text-dim); font-size: 12px; }
+
+  /* Theme toggle */
+  .theme-toggle {
+    flex-shrink: 0;
+    width: 52px;
+    height: 28px;
+    border-radius: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    margin-top: 4px;
+  }
+  .theme-toggle:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .toggle-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  [data-theme="dark"] .toggle-knob { transform: translateX(24px); }
+
+  .toggle-knob svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-sun, .icon-moon { position: absolute; transition: opacity 0.25s; }
+  [data-theme="light"] .icon-moon { opacity: 0; }
+  [data-theme="dark"] .icon-sun { opacity: 0; }
+
+  /* ── Input ── */
+  .input-section { margin-bottom: 20px; }
+  .input-section label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 240px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 18px;
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s;
+    outline: none;
+    box-shadow: var(--shadow-sm);
+  }
+  textarea:focus {
+    border-color: var(--border-focus);
+    box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-glow);
+  }
+  textarea::placeholder { color: var(--text-dim); opacity: 0.5; }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 26px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.1);
+    box-shadow: var(--shadow-md), 0 4px 16px var(--accent-glow);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-secondary:hover {
+    background: var(--surface2);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .status-text { font-size: 12px; color: var(--text-dim); }
+  .status-text .count { color: var(--accent); font-weight: 600; }
+
+  /* ── Progress ── */
+  .progress-wrap {
+    width: 100%;
+    height: 3px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .progress-wrap.active { opacity: 1; }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  /* ── Results ── */
+  .results-section { display: none; }
+  .results-section.visible { display: block; }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .results-header h2 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+
+  .summary-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    font-size: 12px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+  .pill.found { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+  .pill.possible { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-border); }
+  .pill.missing { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+  .pill.error { background: var(--yellow-bg); color: var(--yellow); border-color: var(--yellow-border); }
+  .pill.corrected { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-glow); }
+
+  /* Filter / view toolbar */
+  .results-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-tabs {
+    display: flex;
+    gap: 3px;
+    background: var(--surface2);
+    border-radius: 9px;
+    padding: 3px;
+    box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+  }
+  .filter-tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 7px;
+    background: none;
+    color: var(--text-dim);
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-tab:hover { color: var(--text); }
+  .filter-tab.active {
+    background: var(--surface);
+    color: var(--text-bright);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .view-toggle { display: flex; gap: 3px; background: var(--surface2); border-radius: 9px; padding: 3px; box-shadow: var(--shadow-sm); }
+  .view-btn { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 6px 14px; border-radius: 7px; background: none; color: var(--text-dim); border: none; cursor: pointer; transition: all 0.15s; }
+  .view-btn:hover { color: var(--text); }
+  .view-btn.active { background: var(--surface); color: var(--text-bright); box-shadow: var(--shadow-sm); }
+
+  /* Group section header (grouped view) */
+  .group-section { margin-bottom: 22px; }
+  .group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .group-header .group-count {
+    background: var(--surface2);
+    color: var(--text-bright);
+    font-size: 11px;
+    padding: 2px 9px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .group-empty { color: var(--text-dim); font-size: 12px; font-style: italic; padding: 6px 0 12px; }
+
+  /* Result items */
+  .result-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    animation: fadeSlide 0.3s ease both;
+    box-shadow: var(--shadow-sm);
+    transition: background 0.3s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .result-item:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+  }
+  .result-item.is-corrected { border-color: var(--accent); background: linear-gradient(0deg, var(--accent-soft), var(--accent-soft)), var(--surface); }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-icon {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 1px;
+    border: 1px solid transparent;
+  }
+  .result-icon.ok { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+  .result-icon.fail { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+  .result-icon.warn { background: var(--yellow-bg); color: var(--yellow); border-color: var(--yellow-border); }
+  .result-icon.maybe { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-border); }
+  .result-icon.corrected { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-glow); }
+
+  .result-body { flex: 1; min-width: 0; }
+  .result-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .result-key { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 2px; }
+  .result-type { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); padding: 2px 8px; background: var(--surface2); border-radius: 6px; }
+  .result-title {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 15px;
+    color: var(--text-bright);
+    word-break: break-word;
+    line-height: 1.5;
+  }
+  .result-cleaned { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
+  .result-meta { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .corrected-banner {
+    margin-top: 8px;
+    font-size: 11px;
+    padding: 6px 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Action row under entry */
+  .entry-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .entry-actions .mini-btn {
+    font-size: 11px;
+    padding: 5px 11px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
+  .entry-actions .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .entry-actions .mini-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+  /* Candidates panel */
+  .candidates-panel {
+    margin-top: 12px;
+    border-top: 1px dashed var(--border);
+    padding-top: 12px;
+    display: none;
+  }
+  .candidates-panel.open { display: block; }
+
+  .candidate-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .candidate-card:hover { border-color: var(--accent); }
+  .candidate-card.is-applied { border-color: var(--accent); background: var(--accent-soft); }
+
+  .candidate-title {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 13px;
+    color: var(--text-bright);
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+  .candidate-meta { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+  .candidate-meta .sim { color: var(--accent); font-weight: 600; }
+  .candidate-meta a { color: var(--accent); text-decoration: none; }
+  .candidate-meta a:hover { text-decoration: underline; }
+  .candidate-actions { margin-top: 6px; display: flex; gap: 6px; }
+
+  /* Edit form */
+  .edit-form {
+    margin-top: 10px;
+    padding: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: none;
+  }
+  .edit-form.open { display: block; }
+  .edit-form label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    margin-top: 8px;
+  }
+  .edit-form label:first-child { margin-top: 0; }
+  .edit-form input, .edit-form textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    min-height: auto;
+    box-shadow: none;
+  }
+  .edit-form input:focus, .edit-form textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+  .edit-form textarea { min-height: 60px; resize: vertical; line-height: 1.5; }
+  .edit-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .edit-form .form-actions { margin-top: 12px; display: flex; gap: 8px; }
+
+  .export-row { margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap; padding-top: 18px; border-top: 1px solid var(--border); }
+
+  /* ── Modal ── */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-backdrop.open { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    max-width: 560px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px;
+    animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes popIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .modal h3 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 18px;
+    color: var(--text-bright);
+    margin-bottom: 6px;
+  }
+  .modal .modal-sub { font-size: 12px; color: var(--text-dim); margin-bottom: 18px; }
+
+  .modal section { margin-bottom: 16px; }
+  .modal section .section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .preview-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+    max-height: 240px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .preview-box em, .preview-box i { font-family: 'Source Serif 4', Georgia, serif; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text-bright);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 3rem 2rem 2rem;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--border);
+    margin-top: 4rem;
+    background: var(--surface);
+    transition: background 0.4s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  .footer a { color: var(--accent); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+  .footer-text { font-style: italic; }
+
+  @media (max-width: 600px) {
+    .container { padding: 28px 16px 60px; }
+    .header-text h1 { font-size: 21px; }
+    textarea { min-height: 180px; font-size: 12px; }
+    .result-item { padding: 12px 14px; }
+    button { padding: 10px 18px; font-size: 12px; }
+    .edit-form .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-text">
+      <h1>BibTeX <span>Reference Validator</span></h1>
+      <p>粘贴 BibTeX → CrossRef 验证 → 查看候选 → 修正 → 多格式导出</p>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()" title="切换深色/浅色模式">
+      <div class="toggle-knob">
+        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="input-section">
+    <label>BibTeX Input</label>
+    <textarea id="bibInput" placeholder="@article{example2024,
+  title = {Your Paper Title Here},
+  author = {Author, Name},
+  journal = {Journal Name},
+  year = {2024}
+}"></textarea>
+  </div>
+
+  <div class="controls">
+    <button class="btn-primary" id="btnValidate" onclick="startValidation()">Validate</button>
+    <button class="btn-secondary" id="btnStop" onclick="stopValidation()" style="display:none;">Stop</button>
+    <span class="status-text" id="statusText"></span>
+  </div>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="results-section" id="resultsSection">
+    <div class="results-header">
+      <h2>验证结果</h2>
+      <div class="summary-pills" id="summaryPills"></div>
+    </div>
+
+    <div class="results-toolbar">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" data-filter="all" onclick="setFilter('all', this)">全部</button>
+        <button class="filter-tab" data-filter="found" onclick="setFilter('found', this)">✓ 存在</button>
+        <button class="filter-tab" data-filter="possible" onclick="setFilter('possible', this)">? 可能</button>
+        <button class="filter-tab" data-filter="missing" onclick="setFilter('missing', this)">✗ 不存在</button>
+        <button class="filter-tab" data-filter="error" onclick="setFilter('error', this)">⚠ 出错</button>
+        <button class="filter-tab" data-filter="corrected" onclick="setFilter('corrected', this)">✎ 已修正</button>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" data-view="list" onclick="setView('list', this)">列表</button>
+        <button class="view-btn" data-view="grouped" onclick="setView('grouped', this)">分组</button>
+      </div>
+    </div>
+
+    <div id="resultsList"></div>
+
+    <div class="export-row">
+      <button class="btn-primary" onclick="openExportModal()">导出文献…</button>
+      <button class="btn-secondary" onclick="exportCSV()">导出 CSV 报告</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-backdrop" id="exportModal" onclick="if(event.target===this) closeExportModal()">
+  <div class="modal">
+    <h3>导出文献</h3>
+    <p class="modal-sub">已采用的修正会替换原始数据</p>
+
+    <section>
+      <div class="section-label">引用格式</div>
+      <div class="chip-group" id="formatChips">
+        <button class="chip active" data-format="bibtex">BibTeX</button>
+        <button class="chip" data-format="apa">APA 7</button>
+        <button class="chip" data-format="chicago">Chicago</button>
+        <button class="chip" data-format="mla">MLA 9</button>
+        <button class="chip" data-format="harvard">Harvard</button>
+        <button class="chip" data-format="ris">RIS</button>
+        <button class="chip" data-format="json">JSON</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">包含范围</div>
+      <div class="chip-group" id="scopeChips">
+        <button class="chip active" data-scope="all">全部</button>
+        <button class="chip" data-scope="found_corrected">已存在 + 已修正</button>
+        <button class="chip" data-scope="found">仅已存在</button>
+        <button class="chip" data-scope="corrected">仅已修正</button>
+        <button class="chip" data-scope="problem">仅需处理（可能/不存在/出错）</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">预览（前几条）</div>
+      <div class="preview-box" id="exportPreview"></div>
+    </section>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeExportModal()">取消</button>
+      <button class="btn-secondary" onclick="copyExport()">复制</button>
+      <button class="btn-primary" onclick="downloadExport()">下载</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer class="footer">
+  由 Karcen Zheng 制作，<a href="https://karcen.github.io/zhengjiacheng.github.io/" target="_blank">联系我</a>
+</footer>
+
+<script>
+// ── Theme ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('bib-theme', next); } catch(e) {}
+}
+(function() {
+  try {
+    const saved = localStorage.getItem('bib-theme');
+    if (saved) { document.documentElement.setAttribute('data-theme', saved); return; }
+  } catch(e) {}
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+
+// ── BibTeX parser ──
+function parseBibTeX(text) {
+  const entries = [];
+  const entryRe = /@(\w+)\s*\{\s*([^,\s]*)\s*,([\s\S]*?)(?=\n@|\n\s*$|$)/g;
+  let m;
+  while ((m = entryRe.exec(text)) !== null) {
+    const type = m[1].toLowerCase();
+    const id = m[2].trim();
+    const body = m[3];
+    const fields = {};
+    const fieldRe = /(\w+)\s*=\s*(?:\{((?:[^{}]|\{[^{}]*\})*)\}|"([^"]*)"|(\d+))/g;
+    let fm;
+    while ((fm = fieldRe.exec(body)) !== null) {
+      fields[fm[1].toLowerCase()] = (fm[2] ?? fm[3] ?? fm[4] ?? '').trim();
+    }
+    entries.push({ type, id, fields, raw: m[0].trim() });
+  }
+  return entries;
+}
+
+function cleanTitle(title) {
+  let t = title;
+  t = t.replace(/\$\\([a-zA-Z]+)\$/g, '$1');
+  t = t.replace(/\\[a-zA-Z]+\{([^}]*)\}/g, '$1');
+  t = t.replace(/\{\\.[a-zA-Z]\}/g, m => m.slice(-2, -1));
+  t = t.replace(/[{}]/g, '');
+  t = t.replace(/\\/g, '');
+  t = t.replace(/\s+/g, ' ').trim();
+  return t;
+}
+
+function normalize(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function jaccardSimilarity(a, b) {
+  const aw = new Set(normalize(a).split(/\s+/).filter(Boolean));
+  const bw = new Set(normalize(b).split(/\s+/).filter(Boolean));
+  if (!aw.size || !bw.size) return 0;
+  const inter = [...aw].filter(w => bw.has(w)).length;
+  const union = new Set([...aw, ...bw]).size;
+  return union ? inter / union : 0;
+}
+
+function parseBibAuthors(authorStr) {
+  if (!authorStr) return [];
+  return authorStr.split(/\s+and\s+/i).map(name => {
+    name = name.trim().replace(/[{}]/g, '');
+    if (name.includes(',')) {
+      const parts = name.split(',');
+      return { family: parts[0].trim(), given: (parts[1] || '').trim() };
+    }
+    const parts = name.split(/\s+/);
+    if (parts.length === 1) return { family: parts[0], given: '' };
+    return { given: parts.slice(0, -1).join(' '), family: parts.slice(-1)[0] || '' };
+  }).filter(a => a.family || a.given);
+}
+
+// ── CrossRef ──
+async function searchCrossRef(title) {
+  const url = `https://api.crossref.org/works?query.title=${encodeURIComponent(title)}&rows=5`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const data = await r.json();
+  const items = data?.message?.items || [];
+  return items.map(item => ({
+    title: (item.title && item.title[0]) || '',
+    authors: (item.author || []).map(a => ({ family: a.family || '', given: a.given || '' })),
+    year: (item.issued && item.issued['date-parts'] && item.issued['date-parts'][0] && item.issued['date-parts'][0][0]) ||
+          (item.published && item.published['date-parts'] && item.published['date-parts'][0] && item.published['date-parts'][0][0]) ||
+          (item['published-print'] && item['published-print']['date-parts'] && item['published-print']['date-parts'][0] && item['published-print']['date-parts'][0][0]) ||
+          '',
+    doi: item.DOI || '',
+    container: (item['container-title'] && item['container-title'][0]) || '',
+    type: item.type || '',
+    publisher: item.publisher || '',
+    volume: item.volume || '',
+    issue: item.issue || '',
+    page: item.page || '',
+    similarity: 0
+  }));
+}
+
+async function classifyEntry(title) {
+  const candidates = await searchCrossRef(title);
+  const qNorm = normalize(title);
+  for (const c of candidates) {
+    const cNorm = normalize(c.title);
+    let sim = jaccardSimilarity(title, c.title);
+    if (qNorm && cNorm && (qNorm.includes(cNorm) || cNorm.includes(qNorm))) {
+      sim = Math.max(sim, 0.95);
+    }
+    c.similarity = sim;
+  }
+  candidates.sort((a, b) => b.similarity - a.similarity);
+  const best = candidates.length ? candidates[0].similarity : 0;
+  let status;
+  if (best >= 0.85) status = 'found';
+  else if (best >= 0.4) status = 'possible';
+  else status = 'missing';
+  return { status, candidates: candidates.slice(0, 5), bestSimilarity: best };
+}
+
+// ── State ──
+let results = [];
+let aborted = false;
+let currentFilter = 'all';
+let currentView = 'list';
+const $ = id => document.getElementById(id);
+
+function effectiveStatus(r) {
+  return r.correction ? 'corrected' : r.status;
+}
+
+function setFilter(filter, tabEl) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  renderAll();
+}
+
+function setView(view, btnEl) {
+  currentView = view;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  btnEl.classList.add('active');
+  renderAll();
+}
+
+function escHtml(s) { const d = document.createElement('div'); d.textContent = (s == null ? '' : String(s)); return d.innerHTML; }
+
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function statusToIcon(status) {
+  const map = {
+    found:     { cls: 'ok',        ch: '✓' },
+    possible:  { cls: 'maybe',     ch: '?' },
+    missing:   { cls: 'fail',      ch: '✗' },
+    error:     { cls: 'warn',      ch: '!' },
+    corrected: { cls: 'corrected', ch: '✎' }
+  };
+  return map[status] || map.error;
+}
+
+function statusLabel(s) {
+  return ({ found: '已确认存在', possible: '可能匹配', missing: '未找到', error: '查询出错', corrected: '已修正' })[s] || s;
+}
+
+function authorsShort(authors) {
+  if (!authors || !authors.length) return '';
+  const parts = authors.slice(0, 3).map(a => `${a.given ? a.given[0] + '. ' : ''}${a.family}`.trim());
+  return parts.join(', ') + (authors.length > 3 ? `, et al.` : '');
+}
+
+// ── Render ──
+function renderResultItem(r, index) {
+  const eff = effectiveStatus(r);
+  const ic = statusToIcon(eff);
+  const div = document.createElement('div');
+  div.className = 'result-item' + (r.correction ? ' is-corrected' : '');
+  div.dataset.status = eff;
+  div.dataset.index = index;
+  div.style.animationDelay = `${Math.min(index, 20) * 0.03}s`;
+
+  const hasCands = r.candidates && r.candidates.length;
+  const cleanedDifferent = r.cleanedTitle && r.cleanedTitle !== r.rawTitle;
+
+  let bodyHtml = `
+    <div class="result-row-top">
+      <div class="result-key">${escHtml(r.id)}</div>
+      <span class="result-type">${escHtml(r.type)}</span>
+    </div>
+    <div class="result-title">${escHtml(r.rawTitle || '(无标题)')}</div>
+    ${cleanedDifferent ? `<div class="result-cleaned">cleaned → ${escHtml(r.cleanedTitle)}</div>` : ''}
+  `;
+
+  // Original BibTeX meta line
+  const origMeta = [];
+  if (r.fields.author) origMeta.push(escHtml(r.fields.author.replace(/[{}]/g,'').slice(0, 80)));
+  if (r.fields.year) origMeta.push(escHtml(r.fields.year));
+  if (r.fields.journal || r.fields.booktitle) origMeta.push(escHtml((r.fields.journal || r.fields.booktitle).replace(/[{}]/g,'')));
+  if (origMeta.length) bodyHtml += `<div class="result-meta">${origMeta.join(' · ')}</div>`;
+
+  if (r.correction) {
+    const d = r.correction.data;
+    bodyHtml += `<div class="corrected-banner">✎ 已采用${r.correction.source === 'candidate' ? ' CrossRef ' : '手动'}修正：${escHtml(d.title)}</div>`;
+  }
+
+  // Action buttons
+  const actions = [];
+  if (hasCands) {
+    actions.push(`<button class="mini-btn" onclick="toggleCandidates(${index})">查看 ${r.candidates.length} 个候选</button>`);
+  }
+  if (!r.correction && (eff === 'missing' || eff === 'error')) {
+    actions.push(`<button class="mini-btn" onclick="toggleEdit(${index})">手动修改并重搜</button>`);
+  }
+  if (r.correction) {
+    actions.push(`<button class="mini-btn danger" onclick="undoCorrection(${index})">撤销修正</button>`);
+  }
+  if (actions.length) bodyHtml += `<div class="entry-actions">${actions.join('')}</div>`;
+
+  // Candidates panel
+  if (hasCands) {
+    const candHtml = r.candidates.map((c, ci) => {
+      const isApplied = r.correction && r.correction.source === 'candidate' && r.correction.candidateIndex === ci;
+      const meta = [];
+      if (c.authors && c.authors.length) meta.push(escHtml(authorsShort(c.authors)));
+      if (c.year) meta.push(escHtml(c.year));
+      if (c.container) meta.push(escHtml(c.container));
+      if (c.doi) meta.push(`<a href="https://doi.org/${escHtml(c.doi)}" target="_blank" rel="noopener">DOI</a>`);
+      const simPct = Math.round(c.similarity * 100);
+      return `
+        <div class="candidate-card${isApplied ? ' is-applied' : ''}">
+          <div class="candidate-title">${escHtml(c.title)}</div>
+          <div class="candidate-meta">${meta.join(' · ')} <span class="sim">· ${simPct}%相似</span></div>
+          <div class="candidate-actions">
+            ${isApplied
+              ? `<button class="mini-btn" onclick="undoCorrection(${index})">已采用，点击撤销</button>`
+              : `<button class="mini-btn" onclick="applyCandidate(${index}, ${ci})">采用此候选</button>`}
+          </div>
+        </div>
+      `;
+    }).join('');
+    bodyHtml += `<div class="candidates-panel" id="cands-${index}">${candHtml}</div>`;
+  }
+
+  // Edit form
+  bodyHtml += `
+    <div class="edit-form" id="edit-${index}">
+      <label>标题</label>
+      <input type="text" id="edit-title-${index}" value="${escHtml(r.cleanedTitle || r.rawTitle)}">
+      <div class="form-actions">
+        <button class="mini-btn" onclick="reSearchEdited(${index})">用此标题重新搜索 CrossRef</button>
+        <button class="mini-btn" onclick="applyManual(${index})">直接保存为修正</button>
+        <button class="mini-btn danger" onclick="toggleEdit(${index})">关闭</button>
+      </div>
+    </div>
+  `;
+
+  div.innerHTML = `<div class="result-icon ${ic.cls}">${ic.ch}</div><div class="result-body">${bodyHtml}</div>`;
+  return div;
+}
+
+function renderAll() {
+  const list = $('resultsList');
+  list.innerHTML = '';
+  if (!results.length) return;
+
+  if (currentView === 'grouped') {
+    const order = ['corrected', 'found', 'possible', 'missing', 'error'];
+    const groups = {};
+    order.forEach(s => groups[s] = []);
+    results.forEach((r, i) => {
+      const eff = effectiveStatus(r);
+      if (currentFilter !== 'all' && eff !== currentFilter) return;
+      (groups[eff] || (groups[eff] = [])).push({ r, i });
+    });
+    order.forEach(s => {
+      const items = groups[s] || [];
+      if (currentFilter !== 'all' && currentFilter !== s) return;
+      if (!items.length && currentFilter !== 'all') return;
+      const ic = statusToIcon(s);
+      const section = document.createElement('div');
+      section.className = 'group-section';
+      section.innerHTML = `<div class="group-header"><span style="color:var(--${s==='found'?'green':s==='possible'?'purple':s==='missing'?'red':s==='error'?'yellow':'accent'})">${ic.ch}</span> ${statusLabel(s)} <span class="group-count">${items.length}</span></div>`;
+      if (!items.length) {
+        section.innerHTML += `<div class="group-empty">— 无 —</div>`;
+      } else {
+        items.forEach(({ r, i }) => section.appendChild(renderResultItem(r, i)));
+      }
+      list.appendChild(section);
+    });
+  } else {
+    results.forEach((r, i) => {
+      const eff = effectiveStatus(r);
+      if (currentFilter !== 'all' && eff !== currentFilter) return;
+      list.appendChild(renderResultItem(r, i));
+    });
+  }
+}
+
+function updateSummary() {
+  const counts = { found: 0, possible: 0, missing: 0, error: 0, corrected: 0 };
+  results.forEach(r => counts[effectiveStatus(r)]++);
+  const html = [
+    `<span class="pill found">✓ ${counts.found}</span>`,
+    counts.possible ? `<span class="pill possible">? ${counts.possible}</span>` : '',
+    `<span class="pill missing">✗ ${counts.missing}</span>`,
+    counts.error ? `<span class="pill error">⚠ ${counts.error}</span>` : '',
+    counts.corrected ? `<span class="pill corrected">✎ ${counts.corrected}</span>` : ''
+  ].filter(Boolean).join('');
+  $('summaryPills').innerHTML = html;
+}
+
+// ── Validation flow ──
+async function startValidation() {
+  const raw = $('bibInput').value.trim();
+  if (!raw) return;
+  const entries = parseBibTeX(raw);
+  if (!entries.length) { $('statusText').textContent = '未解析到任何 BibTeX 条目'; return; }
+
+  results = [];
+  aborted = false;
+  $('resultsList').innerHTML = '';
+  $('resultsSection').classList.add('visible');
+  $('progressWrap').classList.add('active');
+  $('progressBar').style.width = '0%';
+  $('btnValidate').disabled = true;
+  $('btnStop').style.display = '';
+  updateSummary();
+
+  for (let i = 0; i < entries.length; i++) {
+    if (aborted) break;
+    const e = entries[i];
+    const rawTitle = e.fields.title || '';
+    const cleaned = cleanTitle(rawTitle);
+    $('statusText').innerHTML = `验证中 <span class="count">${i + 1}/${entries.length}</span> — ${escHtml(e.id)}`;
+    $('progressBar').style.width = `${((i + 1) / entries.length) * 100}%`;
+
+    let status, candidates = [], bestSim = 0;
+    if (!cleaned) { status = 'error'; }
+    else {
+      try {
+        const res = await classifyEntry(cleaned);
+        status = res.status;
+        candidates = res.candidates;
+        bestSim = res.bestSimilarity;
+      } catch { status = 'error'; }
+    }
+
+    const r = {
+      id: e.id, type: e.type, rawTitle, cleanedTitle: cleaned,
+      status, rawEntry: e.raw, fields: e.fields,
+      candidates, bestSimilarity: bestSim,
+      correction: null
+    };
+    results.push(r);
+    renderAll();
+    updateSummary();
+    if (i < entries.length - 1 && !aborted) await new Promise(res => setTimeout(res, 1000));
+  }
+
+  $('btnValidate').disabled = false;
+  $('btnStop').style.display = 'none';
+  const eCounts = { found: 0, possible: 0 };
+  results.forEach(r => { if (r.status === 'found') eCounts.found++; else if (r.status === 'possible') eCounts.possible++; });
+  $('statusText').innerHTML = aborted
+    ? `已停止 — 已验证 <span class="count">${results.length}/${entries.length}</span>`
+    : `完成 — <span class="count">${eCounts.found}</span> 篇确认存在，<span class="count">${eCounts.possible}</span> 篇待确认`;
+}
+
+function stopValidation() { aborted = true; $('btnStop').style.display = 'none'; }
+
+// ── Per-entry interactions ──
+function toggleCandidates(idx) {
+  const el = $('cands-' + idx);
+  if (el) el.classList.toggle('open');
+}
+
+function toggleEdit(idx) {
+  const el = $('edit-' + idx);
+  if (el) el.classList.toggle('open');
+}
+
+function applyCandidate(idx, candIdx) {
+  const r = results[idx];
+  const c = r.candidates[candIdx];
+  if (!c) return;
+  r.correction = {
+    source: 'candidate',
+    candidateIndex: candIdx,
+    data: {
+      title: c.title,
+      authors: c.authors || [],
+      year: c.year || '',
+      doi: c.doi || '',
+      container: c.container || '',
+      type: c.type || '',
+      publisher: c.publisher || '',
+      volume: c.volume || '',
+      issue: c.issue || '',
+      page: c.page || ''
+    }
+  };
+  renderAll();
+  updateSummary();
+  showToast('已采用 CrossRef 候选');
+}
+
+function undoCorrection(idx) {
+  results[idx].correction = null;
+  renderAll();
+  updateSummary();
+  showToast('已撤销修正');
+}
+
+async function reSearchEdited(idx) {
+  const titleEl = $('edit-title-' + idx);
+  const newTitle = (titleEl?.value || '').trim();
+  if (!newTitle) { showToast('标题不能为空'); return; }
+  showToast('搜索中…');
+  try {
+    const res = await classifyEntry(newTitle);
+    results[idx].cleanedTitle = newTitle;
+    results[idx].status = res.status;
+    results[idx].candidates = res.candidates;
+    results[idx].bestSimilarity = res.bestSimilarity;
+    results[idx].correction = null;
+    renderAll();
+    updateSummary();
+    const opened = $('cands-' + idx);
+    if (opened) opened.classList.add('open');
+    showToast(res.status === 'found' ? '匹配到结果！' : res.status === 'possible' ? `找到 ${res.candidates.length} 个可能候选` : '仍未找到');
+  } catch (e) {
+    showToast('搜索失败');
+  }
+}
+
+function applyManual(idx) {
+  const titleEl = $('edit-title-' + idx);
+  const newTitle = (titleEl?.value || '').trim();
+  if (!newTitle) { showToast('标题不能为空'); return; }
+  const r = results[idx];
+  r.correction = {
+    source: 'manual',
+    data: {
+      title: newTitle,
+      authors: parseBibAuthors(r.fields.author || ''),
+      year: r.fields.year || '',
+      doi: r.fields.doi || '',
+      container: r.fields.journal || r.fields.booktitle || '',
+      type: '',
+      publisher: r.fields.publisher || '',
+      volume: r.fields.volume || '',
+      issue: r.fields.number || r.fields.issue || '',
+      page: r.fields.pages || ''
+    }
+  };
+  renderAll();
+  updateSummary();
+  showToast('已保存手动修正');
+}
+
+// ── Build exportable entry (correction overrides original) ──
+function getExportableEntry(r) {
+  if (r.correction) {
+    const d = r.correction.data;
+    return {
+      id: r.id,
+      bibType: mapCRTypeToBib(d.type) || r.type || 'article',
+      crType: d.type || '',
+      title: d.title || '',
+      authors: d.authors || [],
+      year: d.year || '',
+      container: d.container || '',
+      doi: d.doi || '',
+      publisher: d.publisher || '',
+      volume: d.volume || '',
+      issue: d.issue || '',
+      page: d.page || '',
+      status: 'corrected'
+    };
+  }
+  return {
+    id: r.id,
+    bibType: r.type || 'article',
+    crType: '',
+    title: r.cleanedTitle || r.rawTitle,
+    authors: parseBibAuthors(r.fields.author || ''),
+    year: r.fields.year || '',
+    container: r.fields.journal || r.fields.booktitle || '',
+    doi: r.fields.doi || '',
+    publisher: r.fields.publisher || '',
+    volume: r.fields.volume || '',
+    issue: r.fields.number || r.fields.issue || '',
+    page: r.fields.pages || '',
+    status: r.status
+  };
+}
+
+function mapCRTypeToBib(t) {
+  if (!t) return null;
+  if (t.includes('journal')) return 'article';
+  if (t.includes('book-chapter')) return 'incollection';
+  if (t === 'book' || t.includes('monograph')) return 'book';
+  if (t.includes('proceedings')) return 'inproceedings';
+  if (t.includes('thesis') || t.includes('dissertation')) return 'phdthesis';
+  if (t.includes('report')) return 'techreport';
+  return null;
+}
+
+// ── Citation formatters ──
+function formatBibTeX(e) {
+  const lines = [];
+  lines.push(`@${e.bibType}{${e.id},`);
+  if (e.title) lines.push(`  title = {${e.title}},`);
+  if (e.authors.length) {
+    const a = e.authors.map(au => au.given ? `${au.family}, ${au.given}` : au.family).join(' and ');
+    lines.push(`  author = {${a}},`);
+  }
+  if (e.year) lines.push(`  year = {${e.year}},`);
+  if (e.container) {
+    if (e.bibType === 'article') lines.push(`  journal = {${e.container}},`);
+    else lines.push(`  booktitle = {${e.container}},`);
+  }
+  if (e.volume) lines.push(`  volume = {${e.volume}},`);
+  if (e.issue) lines.push(`  number = {${e.issue}},`);
+  if (e.page) lines.push(`  pages = {${e.page}},`);
+  if (e.publisher) lines.push(`  publisher = {${e.publisher}},`);
+  if (e.doi) lines.push(`  doi = {${e.doi}},`);
+  // Trim trailing comma from last field line
+  if (lines.length > 1) lines[lines.length - 1] = lines[lines.length - 1].replace(/,$/, '');
+  lines.push('}');
+  return lines.join('\n');
+}
+
+function initials(given) {
+  return (given || '').split(/[\s\-]+/).filter(Boolean).map(p => p[0].toUpperCase() + '.').join(' ');
+}
+
+function formatAPA(e) {
+  let authorStr = '';
+  const arr = e.authors.map(a => `${a.family}, ${initials(a.given)}`.trim());
+  if (arr.length === 0) authorStr = '';
+  else if (arr.length === 1) authorStr = arr[0];
+  else if (arr.length <= 20) authorStr = arr.slice(0, -1).join(', ') + ', & ' + arr.slice(-1);
+  else authorStr = arr.slice(0, 19).join(', ') + ', ... ' + arr.slice(-1);
+
+  const year = e.year ? ` (${e.year}).` : '.';
+  let s = `${authorStr}${year} ${e.title}.`;
+  if (e.container) s += ` <i>${e.container}</i>`;
+  if (e.volume) s += `, <i>${e.volume}</i>`;
+  if (e.issue) s += `(${e.issue})`;
+  if (e.page) s += `, ${e.page}`;
+  s += '.';
+  if (e.doi) s += ` https://doi.org/${e.doi}`;
+  return s;
+}
+
+function formatChicago(e) {
+  const arr = e.authors.map((a, i) => i === 0
+    ? `${a.family}, ${a.given}`.trim().replace(/, $/, '')
+    : `${a.given} ${a.family}`.trim());
+  let authorStr = '';
+  if (arr.length === 0) authorStr = '';
+  else if (arr.length === 1) authorStr = arr[0];
+  else if (arr.length === 2) authorStr = arr.join(', and ');
+  else authorStr = arr.slice(0, -1).join(', ') + ', and ' + arr.slice(-1);
+  let s = `${authorStr}${authorStr ? '. ' : ''}${e.year || 'n.d.'}. "${e.title}."`;
+  if (e.container) s += ` <i>${e.container}</i>`;
+  if (e.volume) s += ` ${e.volume}`;
+  if (e.issue) s += `, no. ${e.issue}`;
+  if (e.page) s += `: ${e.page}`;
+  s += '.';
+  if (e.doi) s += ` https://doi.org/${e.doi}.`;
+  return s;
+}
+
+function formatMLA(e) {
+  const arr = e.authors.map((a, i) => i === 0
+    ? `${a.family}, ${a.given}`.replace(/, $/, '')
+    : `${a.given} ${a.family}`.trim());
+  let authorStr = '';
+  if (arr.length === 0) authorStr = '';
+  else if (arr.length === 1) authorStr = arr[0];
+  else if (arr.length === 2) authorStr = arr.join(', and ');
+  else authorStr = arr[0] + ', et al';
+  let s = `${authorStr}${authorStr ? '. ' : ''}"${e.title}." `;
+  if (e.container) s += `<i>${e.container}</i>`;
+  if (e.volume) s += `, vol. ${e.volume}`;
+  if (e.issue) s += `, no. ${e.issue}`;
+  if (e.year) s += `, ${e.year}`;
+  if (e.page) s += `, pp. ${e.page}`;
+  s += '.';
+  if (e.doi) s += ` https://doi.org/${e.doi}.`;
+  return s;
+}
+
+function formatHarvard(e) {
+  const arr = e.authors.map((a, i) => i === 0
+    ? `${a.family}, ${initials(a.given)}`.trim()
+    : `${initials(a.given)} ${a.family}`.trim());
+  let authorStr = '';
+  if (arr.length === 0) authorStr = '';
+  else if (arr.length === 1) authorStr = arr[0];
+  else if (arr.length === 2) authorStr = arr.join(' and ');
+  else authorStr = arr.slice(0, -1).join(', ') + ' and ' + arr.slice(-1);
+  let s = `${authorStr}${authorStr ? ' ' : ''}(${e.year || 'n.d.'}) '${e.title}'`;
+  if (e.container) s += `, <i>${e.container}</i>`;
+  if (e.volume) s += `, ${e.volume}`;
+  if (e.issue) s += `(${e.issue})`;
+  if (e.page) s += `, pp. ${e.page}`;
+  s += '.';
+  if (e.doi) s += ` https://doi.org/${e.doi}`;
+  return s;
+}
+
+function formatRIS(e) {
+  const ty = e.bibType === 'article' ? 'JOUR' : e.bibType === 'book' ? 'BOOK' : e.bibType === 'incollection' ? 'CHAP' : e.bibType === 'inproceedings' ? 'CPAPER' : 'GEN';
+  const lines = [`TY  - ${ty}`];
+  if (e.title) lines.push(`TI  - ${e.title}`);
+  e.authors.forEach(a => lines.push(`AU  - ${a.family}${a.given ? ', ' + a.given : ''}`));
+  if (e.year) lines.push(`PY  - ${e.year}`);
+  if (e.container) lines.push(`${ty === 'JOUR' ? 'JO' : 'T2'}  - ${e.container}`);
+  if (e.volume) lines.push(`VL  - ${e.volume}`);
+  if (e.issue) lines.push(`IS  - ${e.issue}`);
+  if (e.page) lines.push(`SP  - ${e.page}`);
+  if (e.publisher) lines.push(`PB  - ${e.publisher}`);
+  if (e.doi) lines.push(`DO  - ${e.doi}`);
+  lines.push('ER  - ');
+  return lines.join('\n');
+}
+
+function formatJSON(e) {
+  return JSON.stringify({
+    id: e.id,
+    type: e.bibType,
+    title: e.title,
+    authors: e.authors,
+    year: e.year,
+    container: e.container,
+    volume: e.volume,
+    issue: e.issue,
+    page: e.page,
+    publisher: e.publisher,
+    doi: e.doi,
+    status: e.status
+  }, null, 2);
+}
+
+function formatEntry(e, fmt) {
+  switch (fmt) {
+    case 'bibtex': return formatBibTeX(e);
+    case 'apa': return formatAPA(e);
+    case 'chicago': return formatChicago(e);
+    case 'mla': return formatMLA(e);
+    case 'harvard': return formatHarvard(e);
+    case 'ris': return formatRIS(e);
+    case 'json': return formatJSON(e);
+    default: return formatBibTeX(e);
+  }
+}
+
+function joinFormatted(list, fmt) {
+  if (fmt === 'json') return '[\n' + list.join(',\n') + '\n]';
+  if (fmt === 'bibtex' || fmt === 'ris') return list.join('\n\n');
+  return list.join('\n\n');
+}
+
+// strip italic <i> tags for plain-text download (keep for HTML preview)
+function stripTags(s) { return s.replace(/<\/?i>/g, ''); }
+
+// ── Export Modal ──
+let exportFormat = 'bibtex';
+let exportScope = 'all';
+
+function openExportModal() {
+  if (!results.length) { showToast('暂无结果'); return; }
+  $('exportModal').classList.add('open');
+  // wire chips
+  $('formatChips').querySelectorAll('.chip').forEach(b => {
+    b.onclick = () => {
+      exportFormat = b.dataset.format;
+      $('formatChips').querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      refreshPreview();
+    };
+  });
+  $('scopeChips').querySelectorAll('.chip').forEach(b => {
+    b.onclick = () => {
+      exportScope = b.dataset.scope;
+      $('scopeChips').querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      refreshPreview();
+    };
+  });
+  refreshPreview();
+}
+
+function closeExportModal() { $('exportModal').classList.remove('open'); }
+
+function getScopedResults() {
+  return results.filter(r => {
+    const s = effectiveStatus(r);
+    if (exportScope === 'all') return true;
+    if (exportScope === 'found') return r.status === 'found' && !r.correction;
+    if (exportScope === 'corrected') return !!r.correction;
+    if (exportScope === 'found_corrected') return r.status === 'found' || !!r.correction;
+    if (exportScope === 'problem') return !r.correction && (r.status === 'possible' || r.status === 'missing' || r.status === 'error');
+    return true;
+  });
+}
+
+function refreshPreview() {
+  const scoped = getScopedResults();
+  const formatted = scoped.slice(0, 3).map(r => formatEntry(getExportableEntry(r), exportFormat));
+  let preview = joinFormatted(formatted, exportFormat) || '(无符合条件的条目)';
+  if (scoped.length > 3) preview += `\n\n... 还有 ${scoped.length - 3} 条未显示`;
+  $('exportPreview').innerHTML = preview; // we want italics in preview
+}
+
+function buildExportText() {
+  const scoped = getScopedResults();
+  const formatted = scoped.map(r => formatEntry(getExportableEntry(r), exportFormat));
+  return stripTags(joinFormatted(formatted, exportFormat));
+}
+
+function exportExtension() {
+  switch (exportFormat) {
+    case 'bibtex': return 'bib';
+    case 'ris': return 'ris';
+    case 'json': return 'json';
+    default: return 'txt';
+  }
+}
+
+function downloadExport() {
+  const text = buildExportText();
+  if (!text) { showToast('没有可导出的条目'); return; }
+  const ext = exportExtension();
+  const name = `references_${exportFormat}_${exportScope}.${ext}`;
+  download(name, text);
+  showToast('已下载');
+}
+
+async function copyExport() {
+  const text = buildExportText();
+  if (!text) { showToast('没有可复制的条目'); return; }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('已复制到剪贴板');
+  } catch {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast('已复制'); } catch { showToast('复制失败'); }
+    document.body.removeChild(ta);
+  }
+}
+
+// ── CSV Export (enhanced) ──
+function exportCSV() {
+  if (!results.length) { showToast('暂无结果'); return; }
+  const header = [
+    'bib_key', 'type', 'status', 'corrected',
+    'raw_title', 'cleaned_title', 'effective_title',
+    'authors', 'year', 'journal_or_book', 'volume', 'issue', 'pages', 'doi',
+    'best_similarity', 'candidate_count', 'top_candidate_title'
+  ];
+  const rows = [header];
+  results.forEach(r => {
+    const ex = getExportableEntry(r);
+    const top = (r.candidates && r.candidates[0]) || null;
+    rows.push([
+      r.id,
+      r.type,
+      effectiveStatus(r),
+      r.correction ? r.correction.source : '',
+      r.rawTitle,
+      r.cleanedTitle,
+      ex.title,
+      ex.authors.map(a => `${a.family}${a.given ? ', ' + a.given : ''}`).join('; '),
+      ex.year,
+      ex.container,
+      ex.volume,
+      ex.issue,
+      ex.page,
+      ex.doi,
+      r.bestSimilarity ? r.bestSimilarity.toFixed(3) : '',
+      r.candidates ? r.candidates.length : 0,
+      top ? top.title : ''
+    ]);
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c == null ? '' : c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  download('bib_report.csv', '\uFEFF' + csv);
+  showToast('已下载 CSV');
+}
+
+function download(name, content) {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// Close modal on Esc
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeExportModal();
+});
+</script>
+</body>
+</html>

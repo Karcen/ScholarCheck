@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Research reference verification: formatted citations and BibTeX, powered by Crossref.">
+  <title>ScholarCheck — Reference Verification Toolkit</title>
+  <style>
+    :root {color-scheme:light;--bg:#f7f7f5;--surface:#fff;--ink:#202523;--muted:#64706a;--line:#dce3df;--accent:#24664c;--hover:#eaf3ee;--shadow:0 10px 40px rgba(19,37,29,.08)}
+    [data-theme="dark"] {color-scheme:dark;--bg:#141b19;--surface:#1c2521;--ink:#eef4ef;--muted:#a3b2a9;--line:#34483d;--accent:#9bdbb7;--hover:#294238;--shadow:0 10px 40px rgba(0,0,0,.2)}
+    *{box-sizing:border-box} html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{background:var(--bg);color:var(--ink)}button,a{font:inherit}a{color:inherit}
+    .shell{max-width:1300px;margin:auto;padding:24px 28px 32px}.header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}.brand{display:flex;gap:14px;align-items:center;text-decoration:none}.brand-mark{display:grid;place-items:center;width:44px;height:44px;border-radius:13px;background:var(--accent);color:var(--surface);font-size:23px;font-weight:700}.brand-name{font-size:21px;font-weight:750;letter-spacing:-.04em}.tagline{display:block;color:var(--muted);font-size:12px;margin-top:3px}.actions{display:flex;gap:10px;align-items:center}.icon-btn,.lang-btn{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 13px;cursor:pointer;color:var(--ink)}.icon-btn:hover,.lang-btn:hover{background:var(--hover)}.intro{margin:37px 0 22px}.eyebrow{color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.13em;font-size:11px}.intro h1{font-size:clamp(26px,3.8vw,37px);letter-spacing:-.045em;margin:8px 0}.intro p{color:var(--muted);margin:0;line-height:1.65;max-width:850px;font-size:15px}
+    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 15px}.tab{padding:17px 20px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:13px;cursor:pointer;color:var(--ink);transition:background .15s,border-color .15s}.tab[aria-selected="true"]{border:2px solid var(--accent);background:var(--hover);padding:16px 19px}.tab strong{display:block;font-size:16px}.tab small{display:block;color:var(--muted);margin-top:5px;font-size:12px;line-height:1.5}
+    .workspace{border:1px solid var(--line);border-radius:15px;background:var(--surface);overflow:hidden;box-shadow:var(--shadow);min-height:710px}.workspace iframe{display:block;border:0;width:100%;height:1050px;background:#fff}.workspace iframe[hidden]{display:none}.hint{padding:12px 17px;background:var(--hover);border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.5}.footer{color:var(--muted);margin-top:18px;font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer a{text-underline-offset:3px}
+    @media(max-width:650px){.shell{padding:18px 12px 24px}.intro{margin-top:24px}.tabs{grid-template-columns:1fr}.workspace iframe{height:1200px}.brand-name{font-size:18px}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="header">
+    <a class="brand" href="./" aria-label="ScholarCheck home"><span class="brand-mark" aria-hidden="true">S</span><span><span class="brand-name">ScholarCheck</span><span class="tagline" data-en="Reference Verification Toolkit" data-zh="学术参考文献核验工具箱">Reference Verification Toolkit</span></span></a>
+    <div class="actions"><button class="lang-btn" id="lang" type="button" aria-label="Switch language">中文</button><button class="icon-btn" id="theme" type="button" aria-label="Toggle dark mode">☾</button></div>
+  </header>
+  <section class="intro"><div class="eyebrow" data-en="RESEARCH INTEGRITY · CROSSREF" data-zh="学术诚信 · CROSSREF">RESEARCH INTEGRITY · CROSSREF</div><h1 data-en="Check your references before you cite." data-zh="引用之前，先核实参考文献。">Check your references before you cite.</h1><p data-en="Two complementary tools in one workspace. Check formatted references or validate and correct BibTeX entries against Crossref metadata. A missing match is not proof that a paper does not exist." data-zh="一个工作台，两种核验方式：检查普通格式的参考文献，或核验和修正 BibTeX 条目。查询不到记录，并不等于论文一定不存在。">Two complementary tools in one workspace. Check formatted references or validate and correct BibTeX entries against Crossref metadata. A missing match is not proof that a paper does not exist.</p></section>
+  <nav class="tabs" role="tablist" aria-label="Verification tools">
+    <button class="tab" id="tab-citation" role="tab" type="button" aria-selected="true" aria-controls="panel-citation"><strong data-en="01 · Citation Verifier" data-zh="01 · 普通参考文献核验">01 · Citation Verifier</strong><small data-en="APA, MLA, Chicago, Vancouver and plain references" data-zh="支持 APA、MLA、Chicago、Vancouver 与普通文本引文">APA, MLA, Chicago, Vancouver and plain references</small></button>
+    <button class="tab" id="tab-bibtex" role="tab" type="button" aria-selected="false" aria-controls="panel-bibtex" tabindex="-1"><strong data-en="02 · BibTeX Validator" data-zh="02 · BibTeX 条目核验">02 · BibTeX Validator</strong><small data-en="Parse .bib entries, inspect candidates and export corrected metadata" data-zh="解析 .bib、查看候选文献并导出修正结果">Parse .bib entries, inspect candidates and export corrected metadata</small></button>
+  </nav>
+  <section class="workspace" aria-label="Verifier workspace">
+    <div class="hint" data-en="The original verification interfaces are preserved below. Each tool has its own theme switch and export controls." data-zh="下方保留原项目的完整核验界面。每个工具独立提供主题切换、结果筛选和导出功能。">The original verification interfaces are preserved below. Each tool has its own theme switch and export controls.</div>
+    <div id="panel-citation" role="tabpanel" aria-labelledby="tab-citation"><iframe id="frame-citation" src="apps/citation/index.html" title="Citation Verifier" loading="eager"></iframe></div>
+    <div id="panel-bibtex" role="tabpanel" aria-labelledby="tab-bibtex" hidden><iframe id="frame-bibtex" src="apps/bibtex/index.html" title="BibTeX Reference Validator" loading="lazy"></iframe></div>
+  </section>
+  <footer class="footer"><span>© 2026 Karcen Zheng · ScholarCheck</span><span><a href="https://github.com/Karcen/is-this-paper-real.gitub.io" target="_blank" rel="noopener noreferrer">Citation source</a> · <a href="https://github.com/Karcen/bibtex-crossref-validator-online.github.io" target="_blank" rel="noopener noreferrer">BibTeX source</a> · <a href="https://api.crossref.org" target="_blank" rel="noopener noreferrer">Crossref API</a></span></footer>
+</div>
+<script>
+(() => {
+  'use strict';
+  const tabs = {citation: document.getElementById('tab-citation'), bibtex: document.getElementById('tab-bibtex')};
+  const panels = {citation: document.getElementById('panel-citation'), bibtex: document.getElementById('panel-bibtex')};
+  const language = document.getElementById('lang');
+  const theme = document.getElementById('theme');
+  const known = ['citation', 'bibtex'];
+  let lang = 'en';
+  function select(name, updateHash = true) {
+    if (!known.includes(name)) return;
+    known.forEach(key => {
+      const current = key === name;
+      panels[key].hidden = !current;
+      tabs[key].setAttribute('aria-selected', String(current));
+      tabs[key].tabIndex = current ? 0 : -1;
+    });
+    if (updateHash) history.replaceState(null, '', '#' + name);
+  }
+  known.forEach(name => {
+    tabs[name].addEventListener('click', () => select(name));
+    tabs[name].addEventListener('keydown', event => {
+      if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+        event.preventDefault();
+        const other = known[(known.indexOf(name) + 1) % known.length];
+        select(other);
+        tabs[other].focus();
+      }
+    });
+  });
+  function setLanguage(value) {
+    lang = value;
+    document.documentElement.lang = value === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => { el.textContent = el.dataset[value]; });
+    language.textContent = value === 'en' ? '中文' : 'English';
+    language.setAttribute('aria-label', value === 'en' ? 'Switch to Chinese' : '切换至英文');
+  }
+  language.addEventListener('click', () => setLanguage(lang === 'en' ? 'zh' : 'en'));
+  theme.addEventListener('click', () => {
+    const dark = document.documentElement.dataset.theme !== 'dark';
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    theme.textContent = dark ? '☀' : '☾';
+  });
+  addEventListener('hashchange', () => select(location.hash.slice(1), false));
+  select(location.hash.slice(1) === 'bibtex' ? 'bibtex' : 'citation', false);
+  setLanguage(navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en');
+})();
+</script>
+</body>
+</html>
