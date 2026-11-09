@@ -78,8 +78,8 @@ ScholarCheck/
 
 压缩包中两套工具的原始项目来源为：
 
-- [Citation Verifier](https://github.com/Karcen/is-this-paper-real.gitub.io)
-- [BibTeX Reference Validator](https://github.com/Karcen/bibtex-crossref-validator-online.github.io)
+- Citation Verifier：历史来源仓库 `Karcen/is-this-paper-real.gitub.io`（当前公开链接不可访问）。
+- BibTeX Reference Validator：历史来源仓库 `Karcen/bibtex-crossref-validator-online.github.io`（当前公开链接不可访问）。
 
 本次保留了用户提供项目中的 MIT `LICENSE`。但该文件本身不能证明两套上游工具分别拥有独立的 MIT 授权；如果要在其他仓库或平台公开再分发合并后的代码，应先确认上游许可条件。
 
