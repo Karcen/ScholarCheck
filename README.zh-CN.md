@@ -2,7 +2,7 @@
 
 [English README](README.md)
 
-ScholarCheck 将普通参考文献核验和 BibTeX 核验整合到一个 `index.html` 中。页面采用浅绿配色，支持暗色模式、手机屏幕和中英文导航。下载后即可打开，不需要安装前端依赖。
+ScholarCheck 将普通参考文献核验和 BibTeX 核验整合到一个 `index.html` 中。页面采用白色主色调和低饱和度绿色点缀，支持暗色模式、手机屏幕和中英文导航。下载后即可打开，不需要安装前端依赖。
 
 这是一套文献元数据核对工具。Crossref 匹配成功，不代表论文的研究结论可靠；没有匹配结果，也不能认定文献是伪造的。
 
@@ -83,4 +83,4 @@ ScholarCheck/
 
 本次保留了用户提供项目中的 MIT `LICENSE`。但该文件本身不能证明两套上游工具分别拥有独立的 MIT 授权；如果要在其他仓库或平台公开再分发合并后的代码，应先确认上游许可条件。
 
-作者：[Karcen Zheng](https://karcen.github.io/zhengjiacheng.github.io/)
+作者：[Karcen Zheng](https://karcen.github.io/)

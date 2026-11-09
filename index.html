@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="ScholarCheck: review formatted citations and BibTeX entries against Crossref metadata in one browser-based workspace.">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f7faf7">
+<meta name="theme-color" content="#ffffff">
 <title>ScholarCheck — Reference checking, thoughtfully done</title>
 <style>
 :root {
   color-scheme:light;
-  --page:#f7faf7; --page-2:#edf5ef; --paper:#ffffff; --panel:#ffffff;
-  --text:#244238; --text-soft:#64796e; --text-muted:#7f9388;
-  --edge:#dfebe2; --edge-strong:#c8dece; --green:#2f8769; --green-dark:#256c54;
-  --mint:#dcefe1; --mint-deep:#b6dec4; --blue:#eaf4f4; --field:#f6faf7;
-  --shadow:0 22px 70px rgba(53,94,71,.07); --focus:#2e8567;
+  --page:#ffffff; --page-2:#f7f8fa; --paper:#ffffff; --panel:#ffffff;
+  --text:#252b31; --text-soft:#59646e; --text-muted:#78838c;
+  --edge:#e9edf0; --edge-strong:#d8e0e6; --green:#42776d; --green-dark:#305d54;
+  --mint:#f1f6f5; --mint-deep:#e1ece9; --blue:#f2f5f8; --field:#fafbfc;
+  --shadow:0 18px 60px rgba(24,40,50,.045); --focus:#42776d;
 }
 html[data-theme="dark"] {
   color-scheme:dark;
@@ -27,7 +27,7 @@ html[data-theme="dark"] {
 * {box-sizing:border-box}
 html {scroll-behavior:smooth}
 body {margin:0; background:var(--page); color:var(--text); font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif; line-height:1.65; -webkit-font-smoothing:antialiased;}
-body::before {content:"";position:absolute;top:78px;right:0;width:40%;height:530px;background:radial-gradient(ellipse at 85% 10%,var(--mint) 0%,transparent 65%);z-index:-1;opacity:.65;pointer-events:none}
+body::before {content:"";position:absolute;top:78px;right:0;width:40%;height:530px;background:radial-gradient(ellipse at 85% 10%,var(--mint) 0%,transparent 60%);z-index:-1;opacity:.38;pointer-events:none}
 a {color:inherit}
 button {font:inherit;cursor:pointer}
 button:focus-visible,a:focus-visible {outline:3px solid var(--focus);outline-offset:3px}
@@ -174,7 +174,8 @@ h1 .line-two {display:block}
     <div class="footnote"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></svg><span data-en="Queries are sent directly from this browser to Crossref. Results depend on database coverage and matching rules; check the DOI or publisher record before relying on them." data-zh="检索请求由浏览器直接发送至 Crossref。结果取决于数据库覆盖与匹配规则；引用前请结合 DOI 落地页或出版商记录进一步核实。">Queries are sent directly from this browser to Crossref. Results depend on database coverage and matching rules; check the DOI or publisher record before relying on them.</span></div>
   </main>
   <footer class="site-footer">
-    <span>© 2026 <a></a>Karcen Zheng · ScholarCheck</span>
+    <span>© 2026 <a href="https://karcen.github.io/" target="_blank" rel="noopener noreferrer">Karcen Zheng</a> · ScholarCheck</span>
+    <div class="footer-links"><a href="https://api.crossref.org" target="_blank" rel="noopener noreferrer">Crossref API</a></div>
   </footer>
 </div>
 <div id="shell-toast" class="shell-toast" role="status" aria-live="polite"></div>
@@ -311,7 +312,7 @@ h1 .line-two {display:block}
   function setTheme(next,persist) {
     document.documentElement.dataset.theme=next;
     themeBtn.setAttribute('aria-label',next==='dark' ? (language==='zh'?'切换至浅色模式':'Switch to light mode') : (language==='zh'?'切换至深色模式':'Switch to dark mode'));
-    document.querySelector('meta[name="theme-color"]').content=next==='dark'?'#101d19':'#f7faf7';
+    document.querySelector('meta[name="theme-color"]').content=next==='dark'?'#101d19':'#ffffff';
     for (const name of names) if (initialized.has(name)) frames[name].contentDocument.documentElement.dataset.theme=next;
     if (persist) setStorage('scholarcheck-theme',next);
   }

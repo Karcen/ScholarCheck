@@ -83,6 +83,6 @@ The two verification engines derive from the user's supplied project, which cite
 - [Citation Verifier](https://github.com/Karcen/is-this-paper-real.gitub.io)
 - [BibTeX Reference Validator](https://github.com/Karcen/bibtex-crossref-validator-online.github.io)
 
-The archive includes the original project's MIT `LICENSE`. That file does not by itself establish the license status of the independently developed upstream applications. Confirm their redistribution permissions if you plan to publish or redistribute the combined code beyond your own repositories.
+The interface uses a white-first light theme with an optional dark mode. The archive includes the original project's MIT `LICENSE`. That file does not by itself establish the license status of the independently developed upstream applications. Confirm their redistribution permissions if you plan to publish or redistribute the combined code beyond your own repositories.
 
-Author: [Karcen Zheng](https://karcen.github.io/zhengjiacheng.github.io/)
+Author: [Karcen Zheng](https://karcen.github.io/)
