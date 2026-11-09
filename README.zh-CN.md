@@ -1,58 +1,86 @@
-# ScholarCheck — 学术参考文献核验工具箱
+# ScholarCheck：参考文献核验工具
 
 [English README](README.md)
 
-ScholarCheck 将两个已有的浏览器端参考文献核验工具整合到同一个 GitHub Pages 项目。新入口提供工具切换、中英文导航和统一部署路径；两套原有的核验算法、交互界面和导出功能保持不变。
+ScholarCheck 将普通参考文献核验和 BibTeX 核验整合到一个 `index.html` 中。页面采用浅绿配色，支持暗色模式、手机屏幕和中英文导航。下载后即可打开，不需要安装前端依赖。
 
-本项目用于辅助筛查引用信息，不是判断论文真伪的最终依据。Crossref 未返回匹配结果，可能是因为文献未被收录、元数据缺失、标题拼写有差异或网络请求失败。需要结合 DOI 落地页、出版机构网站及原文进一步核实。
+这是一套文献元数据核对工具。Crossref 匹配成功，不代表论文的研究结论可靠；没有匹配结果，也不能认定文献是伪造的。
 
 ## 功能
 
-普通参考文献核验（`apps/citation/index.html`）：粘贴 APA、MLA、Chicago、Vancouver 或普通文本引用，支持编号列表；优先进行 DOI 查询，再进行书目信息检索；按核验状态分组，并可导出 CSV、APA、Vancouver、BibTeX 等格式。
+### 普通参考文献
 
-BibTeX 条目核验（`apps/bibtex/index.html`）：粘贴 `.bib` 内容，通过标题在 Crossref 搜索候选文献；查看相似度和候选记录，可采用候选元数据或手动修改；支持导出 BibTeX、APA、Chicago、MLA、Harvard、RIS、JSON 及 CSV 报告。
+支持粘贴 APA、MLA、Chicago、Vancouver、编号列表及普通文本引用。引用中包含 DOI 时，工具优先按 DOI 查询；否则使用参考文献文本检索 Crossref。
 
-两个原始应用分别运行在独立 iframe 中，避免 CSS 样式和 JavaScript 全局函数冲突。切换工具不会自动把输入数据或核验结果传给另一工具。原工具内部的主题切换和结果导出仍可使用。
+查询结果分为 Verified（已匹配）、Possibly Real（可能匹配）和 Not Found（未找到）。可以查看候选记录及书目信息，复制整理后的引文，或导出 CSV、APA、Vancouver、BibTeX 文件。
 
-## 本地运行
+### BibTeX 条目
 
-直接使用现代浏览器打开项目根目录的 `index.html`。也可在项目根目录执行：
+粘贴一个或多个 `.bib` 条目后，工具解析条目，通过标题检索 Crossref，计算候选文献的相似度，并展示匹配情况。可以查看候选记录、采用候选元数据，也可以手动修改条目。
+
+支持导出 BibTeX、APA 7、Chicago、MLA 9、Harvard、RIS、JSON 和 CSV 报告。导出时可以选择包含全部条目，或只包含特定核验、修正状态的条目。
+
+## 如何使用
+
+1. 解压下载的文件。
+2. 用现代浏览器打开 `index.html`。
+3. 选择“普通参考文献”或“BibTeX 条目”，粘贴文本并启动核验。
+4. 检查返回的 DOI、作者、题名、期刊和年份，再复制或导出结果。
+
+页面不需要账号、API 密钥或构建工具。查询 Crossref 时需要联网。如果浏览器限制本地文件运行，可以在文件所在目录执行：
 
 ```sh
 python3 -m http.server 8000
 ```
 
-然后访问 `http://localhost:8000/`。无需安装前端依赖，也不需要 API 密钥。实际查询 Crossref 时需要网络连接。
+随后打开 `http://localhost:8000/`。
 
-## 部署到 GitHub Pages
+## 暗色模式与语言切换
 
-将压缩包中的项目文件上传至一个新的 GitHub 仓库。在 Settings → Pages 中，将发布方式设为 Deploy from a branch，选择 `main` 分支和 `/ (root)` 目录后保存。根目录 `index.html` 即为统一入口。
+右上角的主题按钮控制整页和两套内嵌工具的浅色、深色外观。首次打开时，页面跟随系统配色；手动切换后，选择会保存到浏览器的 `localStorage`（键名 `scholarcheck-theme`）。
 
-访问地址添加 `#citation` 可进入普通参考文献核验；添加 `#bibtex` 可进入 BibTeX 核验。也可以使用 `apps/citation/index.html` 和 `apps/bibtex/index.html` 直接进入独立工具。
+语言按钮控制首页标题、导航与提示文字，支持英文和简体中文。两套原始工具的内部文字没有整体翻译：普通参考文献工具主要使用英文，BibTeX 工具同时包含中文和英文。语言偏好保存在 `scholarcheck-language`。
 
-## 项目结构
+网址加上 `#citation` 可直接打开普通参考文献核验；加上 `#bibtex` 可打开 BibTeX 核验。切换标签时，两套工具分别保留各自的输入和结果，不会互相传输数据。标签支持左右方向键、Home 和 End 键操作。
+
+## 为什么只需要一个 HTML
+
+`index.html` 已包含入口页面、CSS 和两套核验工具的 JavaScript。原工具的文档以 UTF-8/Base64 形式内嵌，运行时分别放入 `srcdoc` iframe。这样既保留了两套工具各自的脚本和结果导出功能，也避免了样式及全局变量冲突。
+
+核验和导出的原有逻辑没有改动；原工具的界面样式已统一调整，Google Fonts 网络字体依赖已删除，改用系统字体。实际部署不再需要 `apps/` 文件夹。
 
 ```text
 ScholarCheck/
-├── index.html                # 统一入口、双语导航和工具切换
-├── apps/
-│   ├── citation/index.html   # 原普通参考文献核验工具
-│   └── bibtex/index.html     # 原 BibTeX 核验工具
-├── README.md                 # 英文说明
-├── README.zh-CN.md           # 中文说明
-└── .nojekyll                 # 关闭 GitHub Pages 的 Jekyll 处理
+├── index.html       # 完整的单文件应用
+├── README.md        # 英文说明
+├── README.zh-CN.md  # 中文说明
+├── LICENSE          # 原项目随附的许可证
+└── .nojekyll        # GitHub Pages 配置
 ```
 
-## 数据隐私与局限
+修改配色和首页文案可直接编辑 `index.html`。修改核验算法时，需要更新 HTML 中对应的 Base64 工具内容；建议先在下方原始项目中修改源码，再重新打包。
 
-浏览器会向 Crossref 公共 API（`https://api.crossref.org`）发送用于检索的参考文献信息或标题。此项目不运行独立后端，也不由项目服务器接收上传文件。两份原始应用会在浏览器本地保存主题偏好。如果未公开论文的标题、研究内容需要保密，不应直接提交到公共检索接口。
+## 发布到 GitHub Pages
 
-核验结果受数据库覆盖范围、相似度阈值、元数据质量和接口可用性影响。显示“存在”并不代表论文可靠；显示“未找到”也不能据此认定为虚构。
+将 `ScholarCheck` 文件夹内的文件放在 GitHub 仓库根目录。在仓库的 Settings → Pages 页面选择 Deploy from a branch，指定部署分支和 `/ (root)`，保存后即可通过 GitHub Pages 访问。
 
-## 来源与许可说明
+也可以部署到其他静态网站托管服务。页面本身不依赖外部静态资源，但文献检索需要能够访问 Crossref。
 
-原项目：[Citation Verifier](https://github.com/Karcen/is-this-paper-real.gitub.io) 与 [BibTeX Reference Validator](https://github.com/Karcen/bibtex-crossref-validator-online.github.io)。本次使用 2026 年 11 月 3 日取得的 `main` 分支 `index.html` 文件，原样放入 `apps/` 对应目录。
+## 数据与核验结果
 
-两个原仓库均未提供单独的 LICENSE 文件，因此不能仅凭 README 中提到 MIT 或开放使用的文字认定其已有明确的代码许可证。向其他主体重新分发前，请确认许可条件。
+项目没有自建后端。执行核验时，浏览器会直接向 `https://api.crossref.org` 发送用于检索的引文文本、文献标题或 DOI。Crossref 因此可能接收到尚未公开的研究题名等敏感信息；对于要求保密的内容，应先判断是否适合提交公共检索接口。
 
-作者：Karcen Zheng · [个人主页](https://karcen.github.io/zhengjiacheng.github.io/)
+页面仅在浏览器本地保存主题和语言偏好，不把参考文献上传到本项目控制的服务器。导出文件由浏览器生成。
+
+匹配结果受 Crossref 收录范围、元数据完整性、标题差异、相似度规则及网络状态影响。引用文献前，仍应查对 DOI 落地页、出版商记录及原文。匹配分数不能替代对论文质量的判断。
+
+## 源码来源与许可
+
+压缩包中两套工具的原始项目来源为：
+
+- [Citation Verifier](https://github.com/Karcen/is-this-paper-real.gitub.io)
+- [BibTeX Reference Validator](https://github.com/Karcen/bibtex-crossref-validator-online.github.io)
+
+本次保留了用户提供项目中的 MIT `LICENSE`。但该文件本身不能证明两套上游工具分别拥有独立的 MIT 授权；如果要在其他仓库或平台公开再分发合并后的代码，应先确认上游许可条件。
+
+作者：[Karcen Zheng](https://karcen.github.io/zhengjiacheng.github.io/)
